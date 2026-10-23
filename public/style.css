@@ -1,0 +1,100 @@
+/* Custom styles for SAATHI AI */
+
+:root {
+  --brand-primary: #4f46e5;
+  --brand-navy: #1e1b4b;
+  --civic-teal: #0d9488;
+}
+
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Filter tab active state */
+.filter-tab.active {
+  background-color: #e0e7ff;
+  color: #3730a3;
+  font-weight: 700;
+  border-color: #c7d2fe;
+}
+
+/* Severity Indicator Bars */
+.sev-bar {
+  width: 14px;
+  height: 8px;
+  border-radius: 2px;
+  background-color: #e2e8f0;
+  transition: all 0.2s ease;
+}
+.sev-bar.active-1 { background-color: #10b981; }
+.sev-bar.active-2 { background-color: #3b82f6; }
+.sev-bar.active-3 { background-color: #f59e0b; }
+.sev-bar.active-4 { background-color: #ea580c; }
+.sev-bar.active-5 { background-color: #dc2626; box-shadow: 0 0 6px rgba(220, 38, 38, 0.5); }
+
+/* Leaflet Map Custom Marker Styling */
+.custom-civic-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+  transition: transform 0.2s ease;
+}
+.custom-civic-marker:hover {
+  transform: scale(1.2);
+  z-index: 999 !important;
+}
+
+.marker-sev-5 { background: #dc2626; }
+.marker-sev-4 { background: #ea580c; }
+.marker-sev-3 { background: #f59e0b; }
+.marker-sev-2 { background: #2563eb; }
+.marker-sev-1 { background: #059669; }
+
+/* Pulse animation for high severity pins */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+.pulse-sev-5 {
+  animation: pulseGlow 1.8s infinite;
+}
+
+/* Leaflet Popup Styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.15) !important;
+  padding: 4px !important;
+}
+.leaflet-popup-content {
+  margin: 12px !important;
+  font-family: inherit !important;
+}
+
+/* Toast show state */
+.toast-visible {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}

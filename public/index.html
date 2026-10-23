@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAATHI AI — From Chaos to Action | Pune Civic Intelligence</title>
+  <meta name="description" content="AI-powered civic action platform transforming citizen problems into structured evidence reports, Pune municipal routing, and official grievance letters.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+              950: '#1e1b4b',
+            },
+            civicTeal: '#0d9488',
+            civicNavy: '#0f172a',
+          },
+          fontFamily: {
+            heading: ['Plus Jakarta Sans', 'Noto Sans Devanagari', 'sans-serif'],
+            body: ['Inter', 'Noto Sans Devanagari', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-body antialiased min-h-screen flex flex-col">
+
+  <!-- Top Announcement / Integrity Bar -->
+  <div class="bg-brand-950 text-slate-300 px-4 py-2 text-xs border-b border-brand-900/50">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          PROMPT WARS 2026
+        </span>
+        <span class="hidden sm:inline text-slate-400">•</span>
+        <span class="text-slate-300 font-medium">Societal Benefit Challenge — Target: Pune, Maharashtra, India</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="backendStatusBadge" class="inline-flex items-center gap-1.5 text-[11px] text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="backendStatusText">Connecting to Civic Engine...</span>
+        </span>
+        <span class="text-slate-600">|</span>
+        <!-- Dual Language Switcher -->
+        <div class="inline-flex rounded-lg bg-slate-900 p-0.5 border border-slate-700 text-xs">
+          <button id="langEnBtn" class="px-2.5 py-1 rounded-md font-semibold text-white bg-brand-600 transition" onclick="setLanguage('en')">EN</button>
+          <button id="langHiBtn" class="px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition" onclick="setLanguage('hi')">हिंदी</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+      <!-- Logo & Branding -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-900 via-brand-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-heading font-extrabold text-xl tracking-tight text-brand-950">SAATHI<span class="text-brand-600 ml-0.5">AI</span></span>
+            <span class="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-teal-50 text-teal-700 border border-teal-200">Pune Civic Hub</span>
+          </div>
+          <p id="navTagline" class="text-xs text-slate-500 font-medium">From Chaos to Action • आपकी आवाज़, आपका मोहल्ला, ठोस कार्यवाही</p>
+        </div>
+      </a>
+
+      <!-- Nav Links -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
+        <a href="#report-section" class="hover:text-brand-600 transition flex items-center gap-1.5" id="navReportLink">
+          <svg class="w-4 h-4 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span data-i18n="nav_report">Report an Issue</span>
+        </a>
+        <a href="#community-section" class="hover:text-brand-600 transition flex items-center gap-1.5" id="navCommunityLink">
+          <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          <span data-i18n="nav_pune_map">Pune Civic Map</span>
+        </a>
+        <a href="#privacy-section" class="hover:text-brand-600 transition" id="navPrivacyLink" data-i18n="nav_privacy">
+          Privacy & Safety
+        </a>
+      </nav>
+
+      <!-- Header Action -->
+      <div class="flex items-center gap-3">
+        <a href="#report-section" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-semibold text-sm shadow-sm shadow-brand-500/30 transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <span data-i18n="cta_start_report">Report Now</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-grow">
+
+    <!-- 1. HERO SECTION -->
+    <section class="relative bg-gradient-to-b from-brand-50/70 via-slate-50 to-white pt-10 pb-16 overflow-hidden border-b border-slate-200/60">
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-200/40 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute top-10 right-0 w-80 h-80 bg-teal-200/30 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div class="grid lg:grid-cols-12 gap-10 items-center">
+          
+          <!-- Hero Copy -->
+          <div class="lg:col-span-7 space-y-6">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100/80 border border-brand-200 text-brand-900 text-xs font-bold tracking-wide">
+              <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+              <span data-i18n="hero_badge">CITIZEN EMPOWERMENT • PUNE MUNICIPALITY</span>
+            </div>
+
+            <h1 class="font-heading font-extrabold text-3xl sm:text-5xl lg:text-5xl text-brand-950 tracking-tight leading-[1.15]">
+              <span data-i18n="hero_title_1">From Chaos to Action:</span><br>
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-teal-600" data-i18n="hero_title_2">AI-Powered Civic Redressal</span>
+            </h1>
+
+            <p class="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl" data-i18n="hero_desc">
+              Transform messy real-world civic problems—potholes, garbage dumps, dark streetlights, and burst water pipes—into verified municipal intelligence, transparent evidence analysis, and copy-ready formal complaint representations.
+            </p>
+
+            <!-- Key Metric Chips -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
+                <div class="text-2xl font-extrabold text-brand-700">4</div>
+                <div class="text-xs font-semibold text-slate-500" data-i18n="stat_categories">Civic Categories</div>
+              </div>
+              <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
+                <div class="text-2xl font-extrabold text-teal-600">12</div>
+                <div class="text-xs font-semibold text-slate-500" data-i18n="stat_wards">Pune Wards Seeded</div>
+              </div>
+              <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
+                <div class="text-2xl font-extrabold text-indigo-700">&lt;200m</div>
+                <div class="text-xs font-semibold text-slate-500" data-i18n="stat_cluster">Cluster Proximity</div>
+              </div>
+              <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
+                <div class="text-2xl font-extrabold text-emerald-600">48h</div>
+                <div class="text-xs font-semibold text-slate-500" data-i18n="stat_sla">PMC Charter SLA</div>
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="flex flex-wrap items-center gap-4 pt-2">
+              <a href="#report-section" class="px-6 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-brand-500/25 flex items-center gap-2 hover:-translate-y-0.5 transition duration-150">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span data-i18n="hero_cta_report">File a Citizen Report</span>
+              </a>
+              <a href="#community-section" class="px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold text-sm sm:text-base flex items-center gap-2 hover:-translate-y-0.5 transition duration-150">
+                <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span data-i18n="hero_cta_map">View Seeded Pune Reports</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Hero Right: Interactive 4 Civic Issues Showcase -->
+          <div class="lg:col-span-5">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-xl shadow-slate-200/50 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider" data-i18n="supported_issues_title">Supported Pune Civic Issues</span>
+                <span class="text-xs text-brand-600 font-semibold bg-brand-50 px-2 py-0.5 rounded-md" data-i18n="click_to_test">Click to Quick Test</span>
+              </div>
+
+              <!-- Issue 1: Potholes -->
+              <div onclick="fillPreset(0)" class="group p-3.5 rounded-xl border border-slate-100 hover:border-brand-300 hover:bg-brand-50/40 cursor-pointer transition flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-xl group-hover:scale-110 transition">
+                  🕳️
+                </div>
+                <div class="flex-grow">
+                  <div class="flex items-center justify-between">
+                    <h4 class="font-heading font-bold text-sm text-slate-900 group-hover:text-brand-700 transition" data-i18n="cat_potholes">Potholes & Damaged Roads</h4>
+                    <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">PMC Road Dept</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5" data-i18n="cat_potholes_sub">Craters, road cave-ins, and uneven asphalt hazard</p>
+                </div>
+              </div>
+
+              <!-- Issue 2: Garbage -->
+              <div onclick="fillPreset(1)" class="group p-3.5 rounded-xl border border-slate-100 hover:border-emerald-300 hover:bg-emerald-50/40 cursor-pointer transition flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 text-xl group-hover:scale-110 transition">
+                  🗑️
+                </div>
+                <div class="flex-grow">
+                  <div class="flex items-center justify-between">
+                    <h4 class="font-heading font-bold text-sm text-slate-900 group-hover:text-emerald-700 transition" data-i18n="cat_garbage">Garbage Accumulation</h4>
+                    <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">PMC Solid Waste</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5" data-i18n="cat_garbage_sub">Overflowing bins, open waste dumping & hygiene risks</p>
+                </div>
+              </div>
+
+              <!-- Issue 3: Streetlights -->
+              <div onclick="fillPreset(2)" class="group p-3.5 rounded-xl border border-slate-100 hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer transition flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 text-xl group-hover:scale-110 transition">
+                  💡
+                </div>
+                <div class="flex-grow">
+                  <div class="flex items-center justify-between">
+                    <h4 class="font-heading font-bold text-sm text-slate-900 group-hover:text-blue-700 transition" data-i18n="cat_streetlights">Broken Streetlights</h4>
+                    <span class="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">MSEDCL / PMC Elec</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5" data-i18n="cat_streetlights_sub">Dark lanes, fixture faults, and exposed wiring hazard</p>
+                </div>
+              </div>
+
+              <!-- Issue 4: Water Leakage -->
+              <div onclick="fillPreset(3)" class="group p-3.5 rounded-xl border border-slate-100 hover:border-cyan-300 hover:bg-cyan-50/40 cursor-pointer transition flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0 text-xl group-hover:scale-110 transition">
+                  💧
+                </div>
+                <div class="flex-grow">
+                  <div class="flex items-center justify-between">
+                    <h4 class="font-heading font-bold text-sm text-slate-900 group-hover:text-cyan-700 transition" data-i18n="cat_water">Water Leakage & Wastage</h4>
+                    <span class="text-[10px] font-semibold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded">PMC Water Supply</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5" data-i18n="cat_water_sub">Pipeline ruptures, chamber overflow & potable water loss</p>
+                </div>
+              </div>
+
+              <!-- Honesty Banner -->
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-[11px] text-slate-600 flex items-center gap-2">
+                <span class="text-teal-600 font-bold">✓</span>
+                <span data-i18n="hero_honesty_note">Demonstration Mode handles missing API keys smoothly with local civic rules.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. REPORTING & AI ANALYSIS WORKFLOW (CORE P0) -->
+    <section id="report-section" class="py-12 bg-white scroll-mt-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-3xl mx-auto mb-10 space-y-2">
+          <span class="text-xs font-bold text-brand-600 uppercase tracking-widest" data-i18n="step1_badge">Step 1 — Report an Issue</span>
+          <h2 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900" data-i18n="step1_heading">
+            Describe the Real-World Problem in Natural Language
+          </h2>
+          <p class="text-sm text-slate-500" data-i18n="step1_subheading">
+            Report in Hindi or English. Our AI analyzes severity, visible evidence, Pune municipal jurisdiction, and builds a copy-ready complaint letter.
+          </p>
+        </div>
+
+        <!-- Quick 1-Click Preset Buttons for Hackathon Judges -->
+        <div class="mb-6 p-4 rounded-2xl bg-gradient-to-r from-brand-50 via-teal-50/50 to-indigo-50 border border-brand-200/80 shadow-xs">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-2.5">
+            <span class="text-xs font-bold text-brand-900 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span data-i18n="presets_title">One-Click Demonstration Scenarios for Judges & Testers:</span>
+            </span>
+            <span class="text-[11px] text-slate-500 font-medium" data-i18n="presets_hint">Click any scenario to auto-fill text, location & sample photo</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <button type="button" onclick="fillPreset(0)" class="p-2.5 rounded-xl bg-white hover:bg-amber-50/70 border border-slate-200 hover:border-amber-300 text-left transition text-xs font-semibold text-slate-800 flex items-center gap-2 shadow-xs group">
+              <span class="text-base">🕳️</span>
+              <div class="truncate">
+                <span class="block text-slate-900 font-bold group-hover:text-amber-700">Kothrud Pothole</span>
+                <span class="block text-[11px] text-slate-500 truncate">Nal Stop Flyover Descent</span>
+              </div>
+            </button>
+
+            <button type="button" onclick="fillPreset(1)" class="p-2.5 rounded-xl bg-white hover:bg-emerald-50/70 border border-slate-200 hover:border-emerald-300 text-left transition text-xs font-semibold text-slate-800 flex items-center gap-2 shadow-xs group">
+              <span class="text-base">🗑️</span>
+              <div class="truncate">
+                <span class="block text-slate-900 font-bold group-hover:text-emerald-700">Viman Nagar Garbage</span>
+                <span class="block text-[11px] text-slate-500 truncate">Datta Mandir Chowk Dump</span>
+              </div>
+            </button>
+
+            <button type="button" onclick="fillPreset(2)" class="p-2.5 rounded-xl bg-white hover:bg-blue-50/70 border border-slate-200 hover:border-blue-300 text-left transition text-xs font-semibold text-slate-800 flex items-center gap-2 shadow-xs group">
+              <span class="text-base">💡</span>
+              <div class="truncate">
+                <span class="block text-slate-900 font-bold group-hover:text-blue-700">Baner Streetlights</span>
+                <span class="block text-[11px] text-slate-500 truncate">High Street Blackout</span>
+              </div>
+            </button>
+
+            <button type="button" onclick="fillPreset(3)" class="p-2.5 rounded-xl bg-white hover:bg-cyan-50/70 border border-slate-200 hover:border-cyan-300 text-left transition text-xs font-semibold text-slate-800 flex items-center gap-2 shadow-xs group">
+              <span class="text-base">💧</span>
+              <div class="truncate">
+                <span class="block text-slate-900 font-bold group-hover:text-cyan-700">Katraj Water Main</span>
+                <span class="block text-[11px] text-slate-500 truncate">Katraj-Kondhwa Burst</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Two Column Layout: Form on Left, Live Results on Right -->
+        <div class="grid lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- LEFT: Report Input Form -->
+          <div class="lg:col-span-5 bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-md shadow-slate-100 space-y-5">
+            <form id="reportForm" onsubmit="handleReportSubmit(event)" class="space-y-4">
+              
+              <!-- Natural Language Description -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="issueDescription" class="font-heading font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                    <span data-i18n="form_desc_label">Problem Description</span>
+                    <span class="text-rose-500">*</span>
+                  </label>
+                  <span id="charCount" class="text-[11px] text-slate-400 font-mono">0 / 800</span>
+                </div>
+                <textarea 
+                  id="issueDescription" 
+                  name="description" 
+                  rows="4" 
+                  required
+                  placeholder="e.g. Near Nal Stop metro station on Karve Road, there is a deep 5-inch pothole causing heavy two-wheeler skids..."
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 text-sm text-slate-800 placeholder-slate-400 transition resize-y"
+                  oninput="updateCharCount(this)"
+                ></textarea>
+              </div>
+
+              <!-- Location Input + GPS Button -->
+              <div>
+                <label for="issueLocation" class="block font-heading font-bold text-sm text-slate-900 mb-1.5">
+                  <span data-i18n="form_loc_label">Pune Location / Landmark</span>
+                </label>
+                <div class="relative flex items-center">
+                  <input 
+                    type="text" 
+                    id="issueLocation" 
+                    name="location" 
+                    list="puneLocalities"
+                    placeholder="e.g. Nal Stop, Karve Road, Kothrud"
+                    class="w-full pl-9 pr-24 py-2.5 rounded-xl border border-slate-300 focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 text-sm text-slate-800 placeholder-slate-400 transition"
+                  >
+                  <svg class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <button 
+                    type="button" 
+                    onclick="detectLocation()" 
+                    id="geoLocBtn"
+                    title="Detect Pune Location via GPS"
+                    class="absolute right-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition"
+                  >
+                    <span>📍</span>
+                    <span data-i18n="btn_detect_gps">Detect</span>
+                  </button>
+                </div>
+                <!-- Datalist of Pune wards & localities -->
+                <datalist id="puneLocalities">
+                  <option value="Nal Stop, Karve Road, Kothrud"></option>
+                  <option value="Datta Mandir Chowk, Viman Nagar"></option>
+                  <option value="Baner High Street, Baner"></option>
+                  <option value="Katraj-Kondhwa Road, Katraj"></option>
+                  <option value="FC Road near Goodluck Cafe, Shivaji Nagar"></option>
+                  <option value="Hinjewadi Phase 1, Maan Road"></option>
+                  <option value="Hadapsar Gadital, Pune-Solapur Road"></option>
+                  <option value="Kalyani Nagar Jogger's Park Lane"></option>
+                  <option value="Parihar Chowk, Aundh"></option>
+                  <option value="Swargate Junction near ST Stand"></option>
+                  <option value="Shaniwar Wada, Kasba Peth"></option>
+                  <option value="Sambhaji Bridge (Lakdi Pul), Deccan"></option>
+                </datalist>
+              </div>
+
+              <!-- Image Upload & Preview -->
+              <div>
+                <label class="block font-heading font-bold text-sm text-slate-900 mb-1.5">
+                  <span data-i18n="form_photo_label">Photographic Evidence</span>
+                  <span class="text-xs font-normal text-slate-400"> (Optional, max 5MB)</span>
+                </label>
+
+                <!-- Dropzone -->
+                <div id="dropzone" class="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50/50 hover:bg-brand-50/20">
+                  <input type="file" id="imageInput" name="image" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="handleFileSelect(event)">
+                  
+                  <div id="uploadPrompt" class="space-y-1">
+                    <svg class="w-8 h-8 text-slate-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <p class="text-xs text-slate-600 font-semibold" data-i18n="upload_click_or_drag">Click or drag & drop photo here</p>
+                    <p class="text-[10px] text-slate-400">Supports JPG, PNG, WebP (Ephemeral processing)</p>
+                  </div>
+
+                  <!-- Preview State -->
+                  <div id="imagePreviewContainer" class="hidden relative">
+                    <img id="imagePreview" src="" alt="Evidence Preview" class="w-full h-36 object-cover rounded-lg border border-slate-200 shadow-xs">
+                    <button type="button" onclick="removeImage(event)" class="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white text-xs transition" title="Remove photo">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <div id="previewMeta" class="mt-1 text-[11px] text-slate-500 font-mono truncate"></div>
+                  </div>
+                </div>
+
+                <!-- Clickable Demo Photo Buttons for fast hackathon testing -->
+                <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[10px] text-slate-400 font-medium">Or attach sample photo:</span>
+                  <button type="button" onclick="loadSamplePhoto('pothole')" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">🕳️ Pothole</button>
+                  <button type="button" onclick="loadSamplePhoto('garbage')" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">🗑️ Garbage</button>
+                  <button type="button" onclick="loadSamplePhoto('streetlight')" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">💡 Streetlight</button>
+                  <button type="button" onclick="loadSamplePhoto('waterleak')" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">💧 Water Leak</button>
+                </div>
+              </div>
+
+              <!-- Output Language Preference -->
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-xs font-semibold text-slate-700" data-i18n="form_lang_pref">Analysis & Letter Language:</span>
+                <div class="flex items-center gap-3 text-xs font-medium">
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="langSelection" value="en" checked class="text-brand-600 focus:ring-brand-500">
+                    <span>English</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="langSelection" value="hi" class="text-brand-600 focus:ring-brand-500">
+                    <span>हिंदी (Hindi)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Mandatory Citizen Consent Checkbox -->
+              <div class="pt-2">
+                <label class="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600">
+                  <input type="checkbox" id="consentCheckbox" required class="mt-0.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                  <span data-i18n="form_consent_text">
+                    I confirm this report reflects an observed civic condition and consent to AI-assisted analysis for civic reporting. No biometric or sensitive PII is included.
+                  </span>
+                </label>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="pt-2">
+                <button 
+                  type="submit" 
+                  id="submitBtn" 
+                  class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-teal-600 hover:opacity-95 text-white font-heading font-bold text-sm shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 transition active:scale-[0.99]"
+                >
+                  <svg id="submitIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <!-- Spinner -->
+                  <svg id="submitSpinner" class="hidden w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span id="submitBtnText" data-i18n="btn_analyze">Run Multimodal AI Analysis</span>
+                </button>
+              </div>
+
+              <!-- Status Notification / Progress -->
+              <div id="formStatusMsg" class="hidden text-xs p-3 rounded-xl"></div>
+            </form>
+          </div>
+
+          <!-- RIGHT: AI Analysis & Actionable Result Panel (Initial Empty State / Populated State) -->
+          <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Empty State Placeholder (Before submission) -->
+            <div id="emptyResultState" class="bg-slate-50/80 rounded-2xl p-8 border-2 border-dashed border-slate-200 text-center space-y-4">
+              <div class="w-14 h-14 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center mx-auto text-2xl shadow-inner">
+                ⚡
+              </div>
+              <div class="max-w-md mx-auto space-y-1.5">
+                <h3 class="font-heading font-bold text-lg text-slate-800" data-i18n="empty_state_title">AI Civic Intelligence Pipeline Standing By</h3>
+                <p class="text-xs text-slate-500" data-i18n="empty_state_desc">
+                  Fill in an issue on the left or click any of the 4 demo presets above. The engine will extract hazard categories, determine Pune municipal routing, evaluate corroborating evidence, and draft a formal complaint representation.
+                </p>
+              </div>
+              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-[11px] font-semibold text-slate-600 shadow-xs">
+                <span>🛡️ Ethical Guardrail:</span>
+                <span class="text-slate-500 font-normal">Never invents locations or factual certainty.</span>
+              </div>
+            </div>
+
+            <!-- Populated AI Result Container (Hidden initially) -->
+            <div id="aiResultContainer" class="hidden space-y-6">
+
+              <!-- AI Engine & Model Attribution Banner -->
+              <div id="aiEngineBanner" class="p-3.5 rounded-xl border flex flex-wrap items-center justify-between gap-2 text-xs">
+                <!-- Dynamically filled: Live Gemini vs Local Demo Engine -->
+              </div>
+
+              <!-- Main Result Card -->
+              <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5">
+                
+                <!-- Category & Severity Header -->
+                <div class="flex flex-wrap items-start justify-between gap-4 pb-4 border-b border-slate-100">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span id="resultCategoryBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-brand-50 text-brand-700 border border-brand-200">
+                        Category
+                      </span>
+                      <span id="resultSubcategory" class="text-xs font-semibold text-slate-500">
+                        Subcategory
+                      </span>
+                    </div>
+                    <h3 id="resultCleanTitle" class="font-heading font-bold text-xl text-slate-900 mt-2">
+                      Problem Title
+                    </h3>
+                  </div>
+
+                  <!-- Severity Meter -->
+                  <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/90 text-right min-w-[150px]">
+                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="severity_label">Severity Level</div>
+                    <div class="flex items-center justify-end gap-1.5 my-1" id="severityBar">
+                      <!-- 5 bars filled dynamically -->
+                    </div>
+                    <div id="resultSeverityLabel" class="text-xs font-bold text-amber-600">Moderate</div>
+                    <div id="resultCharterSLA" class="text-[10px] text-slate-400 mt-0.5">SLA: 48h</div>
+                  </div>
+                </div>
+
+                <!-- Structured Clean Description -->
+                <div>
+                  <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1" data-i18n="structured_problem_summary">
+                    Structured Problem Summary
+                  </h4>
+                  <p id="resultCleanDescription" class="text-sm text-slate-700 leading-relaxed bg-slate-50/70 p-3.5 rounded-xl border border-slate-100">
+                    Description summary here...
+                  </p>
+                </div>
+
+                <!-- Evidence & Observations -->
+                <div>
+                  <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span>👁️</span>
+                    <span data-i18n="visible_evidence_title">Visible Evidence & Observations</span>
+                  </h4>
+                  <ul id="resultEvidenceList" class="space-y-1.5 text-xs text-slate-600 pl-1">
+                    <!-- Dynamic List items -->
+                  </ul>
+                </div>
+
+                <!-- Ground Truth & Transparency Grid: Facts Verified vs Uncertainties -->
+                <div class="grid sm:grid-cols-2 gap-3.5 pt-2">
+                  <!-- Verified Facts -->
+                  <div class="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200 text-xs space-y-1.5">
+                    <div class="font-bold text-emerald-900 flex items-center gap-1.5">
+                      <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                      <span data-i18n="verified_facts_title">Facts Verified from Submission</span>
+                    </div>
+                    <ul id="resultVerifiedFacts" class="space-y-1 text-emerald-800 list-disc list-inside">
+                      <!-- Dynamic list -->
+                    </ul>
+                  </div>
+
+                  <!-- Unknowns / Uncertainties -->
+                  <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200 text-xs space-y-1.5">
+                    <div class="font-bold text-amber-900 flex items-center gap-1.5">
+                      <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                      <span data-i18n="uncertainties_title">Unknown or Uncertain Factors</span>
+                    </div>
+                    <ul id="resultUncertainties" class="space-y-1 text-amber-800 list-disc list-inside">
+                      <!-- Dynamic list -->
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Suggested Responsible Pune Authority -->
+                <div class="p-4 rounded-xl bg-brand-50/60 border border-brand-100 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <span class="text-[11px] font-bold text-brand-700 uppercase tracking-wider" data-i18n="suggested_authority_title">Suggested Responsible Authority</span>
+                    <h5 id="resultAuthorityName" class="font-heading font-bold text-sm text-slate-900 mt-0.5">
+                      Pune Municipal Corporation (PMC)
+                    </h5>
+                    <p id="resultAuthorityContact" class="text-xs text-slate-500 mt-0.5">
+                      Helpline: 1800-1030-222
+                    </p>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg bg-white border border-brand-200 text-xs font-semibold text-brand-800 shadow-xs">
+                    📍 Pune Jurisdiction
+                  </span>
+                </div>
+
+                <!-- Confidence Gauge -->
+                <div class="space-y-1.5 pt-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-slate-600" data-i18n="confidence_gauge_title">AI Diagnostic Confidence</span>
+                    <span id="resultConfidenceScore" class="font-bold text-brand-700">88%</span>
+                  </div>
+                  <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div id="resultConfidenceBar" class="h-full bg-gradient-to-r from-brand-600 to-teal-500 rounded-full" style="width: 88%"></div>
+                  </div>
+                  <p id="resultConfidenceExplanation" class="text-[11px] text-slate-500 italic">
+                    Confidence explanation text...
+                  </p>
+                </div>
+
+              </div>
+
+              <!-- 3. EVIDENCE VERIFICATION & CORROBORATION PANEL (STEP 3) -->
+              <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">🧭</span>
+                    <h4 class="font-heading font-bold text-base text-slate-900" data-i18n="verification_panel_title">
+                      Evidence Verification & Geo-Proximity Analysis
+                    </h4>
+                  </div>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                    DEMO CLUSTER ENGINE
+                  </span>
+                </div>
+
+                <!-- Verification Status & Score -->
+                <div class="grid sm:grid-cols-3 gap-3">
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase">Cluster Score</div>
+                    <div id="verificationScore" class="text-xl font-extrabold text-brand-700">85%</div>
+                    <div class="text-[10px] text-slate-500">Correlation index</div>
+                  </div>
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 sm:col-span-2">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase">Corroboration Status</div>
+                    <div id="verificationStatusText" class="text-xs font-bold text-slate-800 mt-1">Single Independent Report</div>
+                    <div class="text-[10px] text-slate-500">Evaluated against seeded demonstration reports</div>
+                  </div>
+                </div>
+
+                <!-- Supporting vs Unknown Breakdown -->
+                <div class="space-y-2 text-xs text-slate-600">
+                  <div class="font-bold text-slate-700" data-i18n="corroborating_evidence_title">Corroborating Evidence:</div>
+                  <ul id="verificationEvidenceList" class="space-y-1 list-disc list-inside text-slate-600 pl-1">
+                    <!-- Dynamic -->
+                  </ul>
+                </div>
+
+                <!-- Matching Demo Reports in Proximity -->
+                <div id="matchingReportsContainer" class="space-y-2 pt-2">
+                  <span class="text-xs font-bold text-slate-700" data-i18n="matching_reports_title">Nearest Correlating Demo Reports in Pune:</span>
+                  <div id="matchingReportsList" class="space-y-2">
+                    <!-- Dynamic matching cards -->
+                  </div>
+                </div>
+
+                <!-- Honesty Disclaimer -->
+                <div class="p-3 rounded-xl bg-blue-50/60 border border-blue-200 text-[11px] text-blue-900 flex items-start gap-2">
+                  <span class="text-blue-600 font-bold">ℹ️</span>
+                  <span data-i18n="demo_honesty_text">
+                    <strong>Demonstration Integrity Notice:</strong> Matched reports are simulated demonstration records for Pune. Proximity and keyword correlation demonstrate pattern clustering but do not constitute official municipal verification.
+                  </span>
+                </div>
+              </div>
+
+              <!-- 4. ACTION PLAN & COMPLAINT LETTER (STEP 4 & 5) -->
+              <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">📜</span>
+                    <h4 class="font-heading font-bold text-base text-slate-900" data-i18n="complaint_letter_title">
+                      Official Complaint Representation (Ready-to-File)
+                    </h4>
+                  </div>
+                  <!-- Language toggle for letter -->
+                  <div class="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200 text-xs">
+                    <button type="button" id="letterLangEn" onclick="switchLetterLang('en')" class="px-2.5 py-1 rounded font-bold bg-white text-brand-700 shadow-xs">English</button>
+                    <button type="button" id="letterLangHi" onclick="switchLetterLang('hi')" class="px-2.5 py-1 rounded font-medium text-slate-600 hover:text-slate-900">हिंदी</button>
+                  </div>
+                </div>
+
+                <!-- Citizen Next Steps Checklist -->
+                <div class="space-y-2">
+                  <div class="text-xs font-bold text-slate-500 uppercase tracking-wider" data-i18n="action_steps_title">Actionable Citizen Next Steps</div>
+                  <div id="recommendedActionsList" class="space-y-1.5 text-xs text-slate-700">
+                    <!-- Dynamic next steps -->
+                  </div>
+                </div>
+
+                <!-- The Generated Letter Box -->
+                <div class="relative">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-600" data-i18n="formal_text_label">Formal Letter to Pune Municipal Corporation:</span>
+                    <div class="flex items-center gap-2">
+                      <button 
+                        type="button" 
+                        onclick="copyLetterToClipboard()" 
+                        id="copyLetterBtn"
+                        class="px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold flex items-center gap-1.5 transition active:scale-95 border border-brand-200"
+                      >
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        <span id="copyBtnLabel" data-i18n="btn_copy_letter">Copy to Clipboard</span>
+                      </button>
+                      <button 
+                        type="button" 
+                        onclick="downloadLetterTxt()" 
+                        class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95"
+                      >
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span data-i18n="btn_download">Download .txt</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <pre id="complaintLetterContent" class="w-full bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto border border-slate-800 shadow-inner">
+                  </pre>
+                </div>
+
+                <!-- 5. DEMONSTRATION SUBMISSION BUTTON (STEP 6) -->
+                <div class="pt-2 border-t border-slate-100">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div class="text-xs font-bold text-slate-800" data-i18n="demo_submit_title">Record in Pune Civic Desk</div>
+                      <div class="text-[11px] text-slate-500" data-i18n="demo_submit_subtitle">Simulates municipal grievance intake with unique tracking reference</div>
+                    </div>
+                    <button 
+                      type="button" 
+                      id="demoSubmitBtn" 
+                      onclick="submitDemoReport()" 
+                      class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/25 flex items-center gap-2 transition active:scale-95"
+                    >
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                      <span data-i18n="btn_submit_demo">Submit Report (Demonstration)</span>
+                    </button>
+                  </div>
+
+                  <!-- Submission confirmation modal / box -->
+                  <div id="submissionSuccessBox" class="hidden mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">✓</span>
+                        <span class="font-bold text-emerald-950 text-sm" data-i18n="sub_success_title">Report Successfully Recorded</span>
+                      </div>
+                      <span id="demoTrackingIdBadge" class="font-mono font-bold text-xs px-2.5 py-1 rounded bg-white text-emerald-800 border border-emerald-300">
+                        PUN-CIV-2026-XXXX
+                      </span>
+                    </div>
+
+                    <!-- Progress Stepper -->
+                    <div class="grid grid-cols-4 gap-2 text-center text-[10px] pt-1">
+                      <div class="p-2 rounded bg-emerald-200/80 font-bold text-emerald-900">1. Logged</div>
+                      <div class="p-2 rounded bg-emerald-100 text-emerald-800 font-semibold">2. AI Triaged</div>
+                      <div class="p-2 rounded bg-slate-100 text-slate-400">3. Ward Inspection</div>
+                      <div class="p-2 rounded bg-slate-100 text-slate-400">4. Resolution</div>
+                    </div>
+
+                    <p class="text-[11px] text-emerald-800" data-i18n="sub_honesty_disclaimer">
+                      <strong>Simulation Transparency:</strong> This submission is securely stored in the local demo database and visible on the Pune Community Map below. It has not been sent to actual government servers.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. COMMUNITY REPORTS & INTERACTIVE PUNE MAP -->
+    <section id="community-section" class="py-14 bg-slate-50 border-t border-slate-200/80 scroll-mt-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        
+        <!-- Header -->
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-100/80 text-teal-800 text-xs font-bold mb-2">
+              <span>📍</span>
+              <span data-i18n="map_badge">PUNE MUNICIPALITY CIVIC INTELLIGENCE</span>
+            </div>
+            <h2 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900" data-i18n="map_heading">
+              Seeded Community Reports & Pune GIS Map
+            </h2>
+            <p class="text-sm text-slate-500 mt-1" data-i18n="map_subheading">
+              Realistic demonstration records across Kothrud, Shivaji Nagar, Baner, Viman Nagar, Hinjewadi, Hadapsar, and Katraj.
+            </p>
+          </div>
+
+          <!-- Category Filter Tabs -->
+          <div class="flex flex-wrap items-center gap-1.5 text-xs bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
+            <button type="button" onclick="filterReports('All')" class="filter-tab active px-3 py-1.5 rounded-lg font-bold text-brand-700 bg-brand-50" data-cat="All">All (<span id="countAll">12</span>)</button>
+            <button type="button" onclick="filterReports('Potholes')" class="filter-tab px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900" data-cat="Potholes">🕳️ Potholes</button>
+            <button type="button" onclick="filterReports('Garbage')" class="filter-tab px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900" data-cat="Garbage">🗑️ Garbage</button>
+            <button type="button" onclick="filterReports('Streetlights')" class="filter-tab px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900" data-cat="Streetlights">💡 Streetlights</button>
+            <button type="button" onclick="filterReports('Water')" class="filter-tab px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900" data-cat="Water">💧 Water</button>
+          </div>
+        </div>
+
+        <!-- Interactive Map Container -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden">
+          <div class="p-4 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
+              <span class="font-bold tracking-wide">PUNE CIVIC CLUSTERS MAP (18.5204° N, 73.8567° E)</span>
+            </div>
+            <div class="flex items-center gap-4 text-slate-300 text-[11px]">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Critical (Sev 5)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> High (Sev 4)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Moderate (Sev 3)</span>
+            </div>
+          </div>
+          <!-- Leaflet Map Div -->
+          <div id="puneMap" class="w-full h-80 sm:h-96 z-10"></div>
+        </div>
+
+        <!-- Community Report Cards Grid -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Showing <span id="filteredCount" class="font-bold text-slate-900">12</span> Demonstration Reports in Pune</span>
+            <span class="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+              ⚠️ Clearly labeled demo data
+            </span>
+          </div>
+
+          <div id="reportsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamic seeded cards -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. PRIVACY, SAFETY & ETHICAL AI PANEL -->
+    <section id="privacy-section" class="py-14 bg-white border-t border-slate-200 scroll-mt-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        
+        <div class="text-center max-w-3xl mx-auto space-y-2">
+          <span class="text-xs font-bold text-teal-700 uppercase tracking-widest" data-i18n="privacy_badge">Privacy, Ethics & Safety Standards</span>
+          <h2 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900" data-i18n="privacy_heading">
+            Built for Citizen Trust & Responsible AI
+          </h2>
+          <p class="text-sm text-slate-500" data-i18n="privacy_subheading">
+            How SAATHI AI handles your civic evidence, protects privacy, and ensures algorithmic transparency.
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2.5">
+            <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-xl font-bold">
+              🔒
+            </div>
+            <h4 class="font-heading font-bold text-base text-slate-900" data-i18n="priv_col1_title">Ephemeral Processing</h4>
+            <p class="text-xs text-slate-600 leading-relaxed" data-i18n="priv_col1_desc">
+              Uploaded evidence photos are processed in server memory for Gemini visual inference and are not retained in permanent storage.
+            </p>
+          </div>
+
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2.5">
+            <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center text-xl font-bold">
+              🚫
+            </div>
+            <h4 class="font-heading font-bold text-base text-slate-900" data-i18n="priv_col2_title">Zero PII Harvesting</h4>
+            <p class="text-xs text-slate-600 leading-relaxed" data-i18n="priv_col2_desc">
+              No Aadhaar, phone numbers, or residential addresses are requested or logged. We protect citizens from unintended exposure.
+            </p>
+          </div>
+
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2.5">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold">
+              ⚖️
+            </div>
+            <h4 class="font-heading font-bold text-base text-slate-900" data-i18n="priv_col3_title">Anti-Hallucination Guard</h4>
+            <p class="text-xs text-slate-600 leading-relaxed" data-i18n="priv_col3_desc">
+              The AI is strictly prompted to never invent locations or factual certainty. Unknowns are explicitly segregated from verified facts.
+            </p>
+          </div>
+
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2.5">
+            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xl font-bold">
+              📢
+            </div>
+            <h4 class="font-heading font-bold text-base text-slate-900" data-i18n="priv_col4_title">Transparent Demonstration</h4>
+            <p class="text-xs text-slate-600 leading-relaxed" data-i18n="priv_col4_desc">
+              Demonstration records are clearly labeled as hackathon simulation data. No false claims of live government dispatch are made.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-brand-950 text-slate-400 text-xs py-10 border-t border-brand-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="font-heading font-extrabold text-lg text-white tracking-tight">SAATHI<span class="text-brand-500">AI</span></span>
+          <p class="text-slate-400 text-xs mt-0.5">From Chaos to Action • Civic Intelligence Platform</p>
+        </div>
+
+        <div class="flex items-center gap-6 text-xs text-slate-300">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Pune Municipal Jurisdiction</span>
+          <a href="https://pmc.gov.in" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">PMC Portal ↗</a>
+          <a href="tel:18001030222" class="hover:text-white transition">PMC Helpline: 1800-1030-222</a>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-brand-900/60 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+        <p>© 2026 SAATHI AI. Built for Prompt Wars — Societal Benefit Challenge. Target: Pune, India.</p>
+        <p>Powered by Google Gemini 2.5 Flash & Municipal Rule Heuristics.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 text-xs font-semibold">
+      <span id="toastIcon">✓</span>
+      <span id="toastMsg">Notification message</span>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
